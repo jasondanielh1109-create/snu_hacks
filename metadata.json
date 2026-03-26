@@ -1,0 +1,5 @@
+{
+  "name": "Clinic IQ",
+  "description": "A premium hospital competitive intelligence and market analysis platform powered by AI.",
+  "requestFramePermissions": ["geolocation"]
+}
