@@ -961,14 +961,21 @@ export default function App() {
         }
 
         const updatedUser = { ...user, competitors: [...user.competitors, comp] };
-        const users = JSON.parse(localStorage.getItem('cliniciq_users') || '[]');
-        const userIdx = users.findIndex((u: any) => u.email === user.email);
-        if (userIdx !== -1) {
-          users[userIdx] = updatedUser;
-          localStorage.setItem('cliniciq_users', JSON.stringify(users));
-          setUser(updatedUser);
-          showToast(`${comp.name} added to analysis`, 'success');
+        // `cliniciq_users` is stored as an object keyed by email (see `saveUser`).
+        // Keep this consistent to avoid crashes / silent failures.
+        const stored = JSON.parse(localStorage.getItem('cliniciq_users') || '{}');
+        if (Array.isArray(stored)) {
+          // Back-compat for older persisted shapes.
+          const userIdx = stored.findIndex((u: any) => u.email === user.email);
+          if (userIdx !== -1) stored[userIdx] = updatedUser;
+          else stored.push(updatedUser);
+          localStorage.setItem('cliniciq_users', JSON.stringify(stored));
+        } else {
+          stored[user.email] = updatedUser;
+          localStorage.setItem('cliniciq_users', JSON.stringify(stored));
         }
+        setUser(updatedUser);
+        showToast(`${comp.name} added to analysis`, 'success');
       };
 
       return (
@@ -1057,14 +1064,20 @@ export default function App() {
       try {
         const results = await runCompetitiveAnalysis(user);
         const updatedUser = { ...user, analysisResults: results };
-        const users = JSON.parse(localStorage.getItem('cliniciq_users') || '[]');
-        const userIdx = users.findIndex((u: any) => u.email === user.email);
-        if (userIdx !== -1) {
-          users[userIdx] = updatedUser;
-          localStorage.setItem('cliniciq_users', JSON.stringify(users));
-          setUser(updatedUser);
-          showToast('Analysis refreshed successfully', 'success');
+        // `cliniciq_users` is stored as an object keyed by email (see `saveUser`).
+        const stored = JSON.parse(localStorage.getItem('cliniciq_users') || '{}');
+        if (Array.isArray(stored)) {
+          // Back-compat for older persisted shapes.
+          const userIdx = stored.findIndex((u: any) => u.email === user.email);
+          if (userIdx !== -1) stored[userIdx] = updatedUser;
+          else stored.push(updatedUser);
+          localStorage.setItem('cliniciq_users', JSON.stringify(stored));
+        } else {
+          stored[user.email] = updatedUser;
+          localStorage.setItem('cliniciq_users', JSON.stringify(stored));
         }
+        setUser(updatedUser);
+        showToast('Analysis refreshed successfully', 'success');
       } catch (error) {
         console.error('Refresh Error:', error);
         showToast('Failed to refresh analysis', 'error');
